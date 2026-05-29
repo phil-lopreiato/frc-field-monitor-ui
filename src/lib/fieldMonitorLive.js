@@ -1021,7 +1021,7 @@ function toRow(station, matchStatus, metricHistory) {
   };
 }
 
-function orderAlliancePanels(stations, mirrorLayout) {
+function orderAlliancePanels(stations, mirrorLayout, reverseBlueTeams) {
   const grouped = {
     red: [],
     blue: [],
@@ -1039,6 +1039,10 @@ function orderAlliancePanels(stations, mirrorLayout) {
 
   if (!mirrorLayout) {
     grouped.red.reverse();
+  }
+
+  if (reverseBlueTeams) {
+    grouped.blue.reverse();
   }
 
   return {
@@ -1192,8 +1196,8 @@ function toDiagnosticsRow(station, matchStatus, metricHistory) {
   };
 }
 
-export function buildPanels(stations, mirrorLayout, matchStatus, metricHistory) {
-  const { grouped, orderedKeys } = orderAlliancePanels(stations, mirrorLayout);
+export function buildPanels(stations, mirrorLayout, reverseBlueTeams, matchStatus, metricHistory) {
+  const { grouped, orderedKeys } = orderAlliancePanels(stations, mirrorLayout, reverseBlueTeams);
 
   return orderedKeys.map((alliance) => ({
     alliance,
@@ -1202,8 +1206,8 @@ export function buildPanels(stations, mirrorLayout, matchStatus, metricHistory) 
   }));
 }
 
-export function buildDiagnosticsPanels(stations, mirrorLayout, matchStatus, metricHistory) {
-  const { grouped, orderedKeys } = orderAlliancePanels(stations, mirrorLayout);
+export function buildDiagnosticsPanels(stations, mirrorLayout, reverseBlueTeams, matchStatus, metricHistory) {
+  const { grouped, orderedKeys } = orderAlliancePanels(stations, mirrorLayout, reverseBlueTeams);
 
   return orderedKeys.map((alliance) => ({
     alliance,
@@ -1248,7 +1252,11 @@ function buildInitialStations() {
   return ALL_STATION_SLOTS.map(({ alliance, station }) => createEmptyStation(alliance, station));
 }
 
-export function useFieldMonitorLiveData({ mirrorLayout = false, hubConnectionFactory = createHubConnection } = {}) {
+export function useFieldMonitorLiveData({
+  mirrorLayout = false,
+  reverseBlueTeams = false,
+  hubConnectionFactory = createHubConnection,
+} = {}) {
   const baseUrl = getBaseUrl();
   const minBatteryRef = useRef(new Map());
   const metricHistoryRef = useRef(new Map());
@@ -2007,12 +2015,12 @@ export function useFieldMonitorLiveData({ mirrorLayout = false, hubConnectionFac
   ]);
 
   const alliancePanels = useMemo(
-    () => buildPanels(stations, mirrorLayout, matchStatus, metricHistoryRef.current),
-    [matchStatus, mirrorLayout, stations]
+    () => buildPanels(stations, mirrorLayout, reverseBlueTeams, matchStatus, metricHistoryRef.current),
+    [matchStatus, mirrorLayout, reverseBlueTeams, stations]
   );
   const diagnosticsPanels = useMemo(
-    () => buildDiagnosticsPanels(stations, mirrorLayout, matchStatus, metricHistoryRef.current),
-    [matchStatus, mirrorLayout, stations]
+    () => buildDiagnosticsPanels(stations, mirrorLayout, reverseBlueTeams, matchStatus, metricHistoryRef.current),
+    [matchStatus, mirrorLayout, reverseBlueTeams, stations]
   );
   const isFieldReady = useMemo(() => isFieldReadyState(stations, matchStatus), [matchStatus, stations]);
   const scheduleStatus = aheadBehind.isKnown ? aheadBehind.text || 'On schedule' : 'Unknown';

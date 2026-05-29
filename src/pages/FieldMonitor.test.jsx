@@ -131,8 +131,8 @@ describe('FieldMonitor', () => {
     expect(document.title).toBe('Live Monitor - FIRST Field Monitor');
   });
 
-  it('renders the main top bar and forwards mirrorLayout from the query string', () => {
-    renderFieldMonitor('/?mirror=true');
+  it('renders the main top bar and forwards layout params from the query string', () => {
+    renderFieldMonitor('/?mirror=true&reverseBlueTeams=true');
 
     expect(screen.getByText('Match Number')).toBeInTheDocument();
     expect(screen.getByText('M42')).toBeInTheDocument();
@@ -141,7 +141,7 @@ describe('FieldMonitor', () => {
     expect(screen.getByText('Waiting for next start')).toBeInTheDocument();
     expect(screen.getByText('254')).toBeInTheDocument();
     expect(screen.getByText('1114')).toBeInTheDocument();
-    expect(mockUseFieldMonitorLiveData).toHaveBeenCalledWith({ mirrorLayout: true });
+    expect(mockUseFieldMonitorLiveData).toHaveBeenCalledWith({ mirrorLayout: true, reverseBlueTeams: true });
   });
 
   it('renders the feral Lucide status cluster only when the match is ready to start', () => {

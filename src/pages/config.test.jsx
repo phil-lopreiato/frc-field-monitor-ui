@@ -92,13 +92,13 @@ describe('Config', () => {
     expect(document.title).toBe('Config - FIRST Field Monitor');
   });
 
-  it('passes mirrorLayout to the hook and preserves it in the field monitor link', () => {
-    renderConfig('/config?mirror=true');
+  it('passes layout params to the hook and preserves them in the field monitor link', () => {
+    renderConfig('/config?mirror=true&reverseBlueTeams=true');
 
-    expect(mockUseFieldMonitorLiveData).toHaveBeenCalledWith({ mirrorLayout: true });
+    expect(mockUseFieldMonitorLiveData).toHaveBeenCalledWith({ mirrorLayout: true, reverseBlueTeams: true });
     expect(screen.getByRole('link', { name: /open default field monitor/i })).toHaveAttribute(
       'href',
-      '/?mirror=true'
+      '/?mirror=true&reverseBlueTeams=true'
     );
   });
 

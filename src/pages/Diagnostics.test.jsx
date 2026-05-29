@@ -138,8 +138,8 @@ describe('Diagnostics', () => {
     expect(document.title).toBe('Diagnostics - FIRST Field Monitor');
   });
 
-  it('renders the simplified diagnostics top bar and forwards mirrorLayout from the query string', () => {
-    renderDiagnostics('/diagnostics?mirror=true');
+  it('renders the simplified diagnostics top bar and forwards layout params from the query string', () => {
+    renderDiagnostics('/diagnostics?mirror=true&reverseBlueTeams=true');
     const topbar = screen.getByTestId('diagnostics-topbar');
 
     expect(topbar).toBeInTheDocument();
@@ -154,7 +154,7 @@ describe('Diagnostics', () => {
     expect(screen.getAllByTestId('diagnostics-team-number')).toHaveLength(2);
     expect(screen.getByText('1114')).toBeInTheDocument();
     expect(screen.getByText('254')).toBeInTheDocument();
-    expect(mockUseFieldMonitorLiveData).toHaveBeenCalledWith({ mirrorLayout: true });
+    expect(mockUseFieldMonitorLiveData).toHaveBeenCalledWith({ mirrorLayout: true, reverseBlueTeams: true });
   });
 
   it('renders readable one-column team cards with grouped diagnostics sections', () => {

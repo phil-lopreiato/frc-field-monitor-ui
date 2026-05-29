@@ -179,6 +179,7 @@ export default function FieldMonitor() {
 
   const [searchParams] = useSearchParams();
   const mirrorLayout = searchParams.get('mirror') === 'true';
+  const reverseBlueTeams = searchParams.get('reverseBlueTeams') === 'true';
   const replayFileInputRef = useRef(null);
   const [isReplayErrorDismissed, setIsReplayErrorDismissed] = useState(false);
   const [viewportHeight, setViewportHeight] = useState(() =>
@@ -205,6 +206,7 @@ export default function FieldMonitor() {
     isConnected,
   } = useFieldMonitorLiveData({
     mirrorLayout,
+    reverseBlueTeams,
   });
   const replayError = replay.error || (sourceMode === 'replay' ? error : '');
   const showReplayError = Boolean(replayError) && !isReplayErrorDismissed;

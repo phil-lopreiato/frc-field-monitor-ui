@@ -138,6 +138,41 @@ describe('useFieldMonitorLiveData', () => {
     expect(infrastructureHub.stop).toHaveBeenCalledTimes(1);
   });
 
+  it('reverses blue station order when requested', async () => {
+    const hubFactory = createFakeHubFactory();
+    const { result } = renderHook(() =>
+      useFieldMonitorLiveData({
+        reverseBlueTeams: true,
+        hubConnectionFactory: hubFactory.factory,
+      })
+    );
+
+    await waitFor(() => {
+      expect(result.current.isConnected).toBe(true);
+    });
+
+    const fieldHub = hubFactory.getHubByName('fieldMonitorHub');
+    const infrastructureHub = hubFactory.getHubByName('infrastructureHub');
+
+    act(() => {
+      fieldHub.emit('fieldMonitorDataChanged', [
+        createStationPayload({ Alliance: AllianceType.Blue, Station: StationType.Station1, TeamNumber: 111 }),
+        createStationPayload({ Alliance: AllianceType.Blue, Station: StationType.Station2, TeamNumber: 222 }),
+        createStationPayload({ Alliance: AllianceType.Blue, Station: StationType.Station3, TeamNumber: 333 }),
+      ]);
+      infrastructureHub.emit('matchStatusInfoChanged', {
+        MatchState: MatchStateType.MatchTeleop,
+        MatchNumber: 42,
+        PlayNumber: 1,
+        TournamentLevel: 'Qualification',
+      });
+    });
+
+    await waitFor(() => {
+      expect(result.current.alliancePanels[0].rows.map((row) => row.station)).toEqual(['Stn 3', 'Stn 2', 'Stn 1']);
+    });
+  });
+
   it('defaults live requests to same-origin when no browser base URL is configured', async () => {
     const hubFactory = createFakeHubFactory();
 

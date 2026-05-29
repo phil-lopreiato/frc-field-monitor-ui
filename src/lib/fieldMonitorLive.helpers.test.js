@@ -59,7 +59,7 @@ function createHealthyRow(overrides = {}, matchStatusOverrides = {}) {
     ...matchStatusOverrides,
   });
 
-  return buildPanels([station], true, matchStatus)[0].rows[0];
+  return buildPanels([station], true, false, matchStatus)[0].rows[0];
 }
 
 function createHealthyDiagnosticsRow(overrides = {}, matchStatusOverrides = {}) {
@@ -97,7 +97,7 @@ function createHealthyDiagnosticsRow(overrides = {}, matchStatusOverrides = {}) 
     ...matchStatusOverrides,
   });
 
-  return buildDiagnosticsPanels([station], true, matchStatus)[0].rows[0];
+  return buildDiagnosticsPanels([station], true, false, matchStatus)[0].rows[0];
 }
 
 function createReadyStations(overridesBySlot = {}) {
@@ -200,13 +200,18 @@ describe('fieldMonitorLive helpers', () => {
       TournamentLevel: 'Qualification',
     });
 
-    const defaultPanels = buildPanels(stations, false, matchStatus);
+    const defaultPanels = buildPanels(stations, false, false, matchStatus);
     expect(defaultPanels.map((panel) => panel.alliance)).toEqual(['blue', 'red']);
+    expect(defaultPanels[0].rows.map((row) => row.station)).toEqual(['Stn 1', 'Stn 2', 'Stn 3']);
     expect(defaultPanels[1].rows.map((row) => row.station)).toEqual(['Stn 3', 'Stn 2', 'Stn 1']);
 
-    const mirroredPanels = buildPanels(stations, true, matchStatus);
+    const mirroredPanels = buildPanels(stations, true, false, matchStatus);
     expect(mirroredPanels.map((panel) => panel.alliance)).toEqual(['red', 'blue']);
     expect(mirroredPanels[0].rows.map((row) => row.station)).toEqual(['Stn 1', 'Stn 2', 'Stn 3']);
+
+    const reversedBluePanels = buildPanels(stations, false, true, matchStatus);
+    expect(reversedBluePanels.map((panel) => panel.alliance)).toEqual(['blue', 'red']);
+    expect(reversedBluePanels[0].rows.map((row) => row.station)).toEqual(['Stn 3', 'Stn 2', 'Stn 1']);
   });
 
   it('marks the field ready only during prestart when all six stations are connected or bypassed', () => {
@@ -493,12 +498,17 @@ describe('fieldMonitorLive helpers', () => {
       TournamentLevel: 'Qualification',
     });
 
-    const defaultPanels = buildDiagnosticsPanels(stations, false, matchStatus);
+    const defaultPanels = buildDiagnosticsPanels(stations, false, false, matchStatus);
     expect(defaultPanels.map((panel) => panel.alliance)).toEqual(['blue', 'red']);
+    expect(defaultPanels[0].rows.map((row) => row.station)).toEqual(['Stn 1', 'Stn 2', 'Stn 3']);
     expect(defaultPanels[1].rows.map((row) => row.station)).toEqual(['Stn 3', 'Stn 2', 'Stn 1']);
 
-    const mirroredPanels = buildDiagnosticsPanels(stations, true, matchStatus);
+    const mirroredPanels = buildDiagnosticsPanels(stations, true, false, matchStatus);
     expect(mirroredPanels.map((panel) => panel.alliance)).toEqual(['red', 'blue']);
     expect(mirroredPanels[0].rows.map((row) => row.station)).toEqual(['Stn 1', 'Stn 2', 'Stn 3']);
+
+    const reversedBluePanels = buildDiagnosticsPanels(stations, false, true, matchStatus);
+    expect(reversedBluePanels.map((panel) => panel.alliance)).toEqual(['blue', 'red']);
+    expect(reversedBluePanels[0].rows.map((row) => row.station)).toEqual(['Stn 3', 'Stn 2', 'Stn 1']);
   });
 });
