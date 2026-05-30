@@ -106,6 +106,46 @@ Important operational note:
 - `npm start` serves the built app from `dist` through the proxy, typically `:3000`.
 - If you change the UI and want to see those updates in proxy mode, run `npm run build` again before restarting `npm start`.
 
+### Docker
+
+The repository includes a production Dockerfile that builds the Vite app and runs the bundled Node proxy server.
+
+Build the image:
+
+```sh
+docker build -t first-field-monitor .
+```
+
+Run it in proxy mode:
+
+```sh
+docker run --rm -p 3000:3000 \
+  -e FIELD_MONITOR_UPSTREAM_URL=http://10.0.100.5 \
+  first-field-monitor
+```
+
+Optional runtime environment variables:
+
+| Variable | Purpose |
+| --- | --- |
+| `FIELD_MONITOR_UPSTREAM_URL` | Upstream field server for proxied REST and SignalR traffic. |
+| `PORT` | Container listen port. Defaults to `3000`. |
+| `HOST` | Container bind host. Defaults to `0.0.0.0`. |
+
+The image builds the frontend without a fixed `VITE_FIELD_MONITOR_BASE_URL`, so the browser uses same-origin requests and works naturally behind the internal proxy.
+
+### Docker Compose
+
+`docker-compose.yml` wraps the default proxy-mode port and upstream settings, using values from `.env` when present.
+
+Start it with:
+
+```sh
+docker compose up --build
+```
+
+By default this publishes `localhost:3000` and forwards to `FIELD_MONITOR_UPSTREAM_URL=http://10.0.100.5`. Override either value in `.env` before starting compose if needed.
+
 ## Live And Replay Workflow
 
 ### Live Monitor

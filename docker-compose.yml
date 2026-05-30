@@ -1,0 +1,11 @@
+services:
+  field-monitor-ui:
+    build:
+      context: .
+    image: first-field-monitor
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      HOST: 0.0.0.0
+      PORT: 3000
+      FIELD_MONITOR_UPSTREAM_URL: "${FIELD_MONITOR_UPSTREAM_URL:-http://10.0.100.5}"
