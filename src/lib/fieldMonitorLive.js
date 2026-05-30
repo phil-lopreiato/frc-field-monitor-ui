@@ -386,19 +386,14 @@ function createCycleMatchKey(matchStatus) {
   return `${matchNumber}:${Number(matchStatus?.playNumber) || 0}`;
 }
 
-function formatCompletedCycle(ms) {
-  const totalMinutes = Math.round((Number(ms) || 0) / 60000);
-  return totalMinutes > 0 ? `${totalMinutes}m` : '<1m';
-}
-
-function formatRunningCycle(ms) {
+function formatCycleClock(ms) {
   const totalSeconds = Math.max(0, Math.floor((Number(ms) || 0) / 1000));
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
   return `${minutes}:${String(seconds).padStart(2, '0')}`;
 }
 
-function buildCycleCadence(state, currentObservedMs) {
+function buildCycleCadence(state, currentObservedMs, matchState) {
   const lastCycleMs = Number.isFinite(state?.lastCycleMs) && state.lastCycleMs >= 0 ? state.lastCycleMs : null;
   const currentCycleTrust = state?.currentCycleTrust || 'unknown';
   const currentCycleStartMs =
@@ -408,21 +403,18 @@ function buildCycleCadence(state, currentObservedMs) {
     currentCycleTrust !== 'observed' || currentCycleStartMs == null || clockMs == null
       ? null
       : Math.max(0, clockMs - currentCycleStartMs);
-  const lastCycleLabel = lastCycleMs == null ? '' : formatCompletedCycle(lastCycleMs);
-  const currentCycleLabel = currentCycleMs == null ? '' : formatRunningCycle(currentCycleMs);
+  const lastCycleLabel = lastCycleMs == null ? '' : formatCycleClock(lastCycleMs);
+  const currentCycleLabel = currentCycleMs == null ? '' : formatCycleClock(currentCycleMs);
   const isCurrentCycleInProgress = currentCycleTrust === 'observed' || currentCycleTrust === 'inferred';
+  const isLiveMatch = isLiveMatchState(Number(matchState));
 
-  let summary = 'Waiting for next start';
-  if (lastCycleLabel && currentCycleTrust === 'observed' && currentCycleLabel) {
-    summary = `${lastCycleLabel} last | ${currentCycleLabel} run`;
-  } else if (lastCycleLabel && currentCycleTrust === 'inferred') {
-    summary = `${lastCycleLabel} last | in progress`;
+  let summary = '';
+  if (isLiveMatch) {
+    summary = lastCycleLabel ? `${lastCycleLabel} cycle` : '';
   } else if (currentCycleTrust === 'observed' && currentCycleLabel) {
-    summary = `${currentCycleLabel} running`;
-  } else if (currentCycleTrust === 'inferred') {
-    summary = 'in progress';
+    summary = `${currentCycleLabel} cycle`;
   } else if (lastCycleLabel) {
-    summary = `${lastCycleLabel} last`;
+    summary = `${lastCycleLabel} cycle`;
   }
 
   return {
@@ -2011,7 +2003,7 @@ export function useFieldMonitorLiveData({
     [matchStatus, mirrorLayout, reverseBlueTeams, stations]
   );
   const isFieldReady = useMemo(() => isFieldReadyState(stations, matchStatus), [matchStatus, stations]);
-  const scheduleStatus = aheadBehind.isKnown ? aheadBehind.text || 'On schedule' : 'Unknown';
+  const scheduleStatus = aheadBehind.isKnown ? aheadBehind.text || 'On schedule' : '';
   const cycleCadence = useMemo(
     () =>
       buildCycleCadence(
@@ -2020,9 +2012,10 @@ export function useFieldMonitorLiveData({
           ? cycleClockMs
           : sourceMode === 'replay'
             ? replayState.currentTimeMs
-            : Date.now()
+            : Date.now(),
+        matchStatus.matchState
       ),
-    [cycleCadenceState, cycleClockMs, replayState.currentTimeMs, sourceMode]
+    [cycleCadenceState, cycleClockMs, matchStatus.matchState, replayState.currentTimeMs, sourceMode]
   );
 
   return {

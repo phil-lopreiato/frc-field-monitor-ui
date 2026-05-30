@@ -209,6 +209,8 @@ export default function FieldMonitor() {
   const showReplayError = Boolean(replayError) && !isReplayErrorDismissed;
   const showReplayOverlay = sourceMode === 'replay' || showReplayError;
   const scheduleTrendText = isAheadBehindKnown ? aheadBehind : scheduleStatus;
+  const scheduleDisplay = scheduleTrendText || '';
+  const cycleDisplay = cycleCadence.summary || '';
   const isAhead = isAheadScheduleStatus(scheduleTrendText);
 
   useEffect(() => {
@@ -351,7 +353,7 @@ export default function FieldMonitor() {
           className="relative overflow-hidden rounded-[22px] bg-white px-3 py-1.5 shadow-sm ring-1 ring-zinc-200 [@media(max-width:380px)]:px-2 [@media(max-width:380px)]:py-1.5 lg:px-4 lg:py-2 [@media(min-width:1024px)_and_(max-height:860px)]:px-2.5 [@media(min-width:1024px)_and_(max-height:860px)]:py-1 [@media(min-width:1024px)_and_(max-height:720px)]:px-2 [@media(min-width:1024px)_and_(max-height:720px)]:py-0.5"
         >
           <div className="relative z-10">
-            <div className="flex items-start justify-between gap-2.5 [@media(max-width:380px)]:gap-2 sm:grid sm:grid-cols-[minmax(0,0.9fr)_minmax(0,1.25fr)_minmax(0,0.85fr)] sm:items-end sm:gap-3">
+            <div className="flex items-start justify-between gap-2.5 [@media(max-width:380px)]:gap-2 sm:grid sm:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)_minmax(0,1fr)] sm:items-end sm:gap-2.5 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.25fr)_minmax(0,0.85fr)] xl:gap-3">
               <div className="flex-1 sm:flex-none">
                 <TopBarStat
                   label="Match Number"
@@ -365,31 +367,34 @@ export default function FieldMonitor() {
                   value={getMatchStatusValue(matchStatus)}
                   align="right"
                   className="relative z-10 min-w-0 sm:items-center sm:text-center"
-                  valueClassName="self-stretch overflow-hidden text-[17px] [@media(max-width:380px)]:text-[15px] sm:text-[22px] [@media(min-width:1024px)_and_(max-height:860px)]:text-[19px] [@media(min-width:1024px)_and_(max-height:720px)]:text-[16px]"
+                  valueClassName="self-stretch overflow-hidden text-[17px] [@media(max-width:380px)]:text-[15px] sm:text-[20px] xl:text-[22px] [@media(min-width:1024px)_and_(max-height:860px)]:text-[19px] [@media(min-width:1024px)_and_(max-height:720px)]:text-[16px]"
                   wrapValue
                 />
               </div>
-              <div className="hidden min-w-0 sm:flex sm:min-w-0 sm:items-start sm:justify-end sm:gap-3">
+              <div
+                data-testid="field-monitor-topbar-trend-group"
+                className="hidden min-w-0 sm:flex sm:min-w-0 sm:flex-nowrap sm:items-start sm:justify-end sm:gap-2 xl:gap-3"
+              >
                 <TopBarStat
                   label="Schedule Status"
-                  value={scheduleStatus}
+                  value={scheduleDisplay}
                   align="right"
                   className="min-w-0 flex-1"
-                  valueClassName="text-[15px] [@media(max-width:380px)]:text-[13px] sm:text-[20px] [@media(min-width:1024px)_and_(max-height:860px)]:text-[17px] [@media(min-width:1024px)_and_(max-height:720px)]:text-[14px]"
+                  valueClassName="text-[15px] [@media(max-width:380px)]:text-[13px] sm:text-[18px] xl:text-[20px] [@media(min-width:1024px)_and_(max-height:860px)]:text-[17px] [@media(min-width:1024px)_and_(max-height:720px)]:text-[14px]"
                 />
                 <TopBarStat
                   label="Cycle"
-                  value={cycleCadence.summary}
+                  value={cycleDisplay}
                   align="right"
                   className="min-w-0 flex-1"
-                  valueClassName="text-[14px] [@media(max-width:380px)]:text-[12px] sm:text-[18px] [@media(min-width:1024px)_and_(max-height:860px)]:text-[16px] [@media(min-width:1024px)_and_(max-height:720px)]:text-[13px]"
+                  valueClassName="text-[14px] [@media(max-width:380px)]:text-[12px] sm:text-[16px] xl:text-[18px] [@media(min-width:1024px)_and_(max-height:860px)]:text-[16px] [@media(min-width:1024px)_and_(max-height:720px)]:text-[13px]"
                 />
               </div>
             </div>
             <div className="mt-1.5 border-t border-zinc-100 pt-1.5 sm:hidden">
               <TopBarStat
                 label="Schedule Status"
-                value={scheduleStatus}
+                value={scheduleDisplay}
                 className="min-w-0"
                 valueClassName="text-[17px] [@media(max-width:380px)]:text-[15px] sm:text-[22px] [@media(min-width:1024px)_and_(max-height:860px)]:text-[19px] [@media(min-width:1024px)_and_(max-height:720px)]:text-[16px]"
                 wrapValue

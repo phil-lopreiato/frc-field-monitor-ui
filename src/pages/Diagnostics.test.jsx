@@ -92,7 +92,7 @@ function createHookState(overrides = {}) {
     },
     scheduleStatus: 'On schedule',
     cycleCadence: {
-      summary: 'Waiting for next start',
+      summary: '',
     },
     aheadBehind: '',
     isAheadBehindKnown: false,
@@ -149,7 +149,7 @@ describe('Diagnostics', () => {
     expect(within(topbar).getByText('M42')).toBeInTheDocument();
     expect(within(topbar).getByText('Teleop')).toBeInTheDocument();
     expect(within(topbar).getByText('On schedule')).toBeInTheDocument();
-    expect(within(topbar).getByText('Waiting for next start')).toBeInTheDocument();
+    expect(within(topbar).queryByText('Waiting for next start')).not.toBeInTheDocument();
     expect(screen.getAllByTestId('diagnostics-card')).toHaveLength(2);
     expect(screen.getAllByTestId('diagnostics-team-number')).toHaveLength(2);
     expect(screen.getByText('1114')).toBeInTheDocument();

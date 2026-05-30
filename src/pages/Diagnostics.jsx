@@ -75,6 +75,8 @@ export default function Diagnostics() {
   const showReplayError = Boolean(replayError) && !isReplayErrorDismissed;
   const showReplayOverlay = sourceMode === 'replay' || showReplayError;
   const scheduleTrendText = isAheadBehindKnown ? aheadBehind : scheduleStatus;
+  const scheduleDisplay = scheduleTrendText || '';
+  const cycleDisplay = cycleCadence.summary || '';
   const scheduleTone = normalizeScheduleStatus(scheduleTrendText).includes('behind')
     ? 'text-amber-700'
     : normalizeScheduleStatus(scheduleTrendText).startsWith('ahead')
@@ -124,8 +126,8 @@ export default function Diagnostics() {
             <div className="grid min-w-0 flex-1 gap-2 sm:grid-cols-2 xl:grid-cols-4">
               <TopBarStat label="Match Number" value={matchStatus.matchNumber > 0 ? `M${matchStatus.matchNumber}` : 'No match yet'} />
               <TopBarStat label="Match State" value={matchStatus.matchStateMessage || 'Waiting for data'} />
-              <TopBarStat label="Schedule" value={scheduleTrendText || 'Unknown'} valueClassName={scheduleTone} />
-              <TopBarStat label="Cycle" value={cycleCadence.summary || 'Waiting for data'} />
+              <TopBarStat label="Schedule" value={scheduleDisplay} valueClassName={scheduleTone} />
+              <TopBarStat label="Cycle" value={cycleDisplay} />
             </div>
             <button
               type="button"

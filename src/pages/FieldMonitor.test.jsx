@@ -79,7 +79,7 @@ function createHookState(overrides = {}) {
       currentCycleMs: null,
       lastCycleLabel: '',
       currentCycleLabel: '',
-      summary: 'Waiting for next start',
+      summary: '',
       isKnown: false,
       isCurrentCycleActive: false,
       currentAnchorMatch: '',
@@ -141,7 +141,8 @@ describe('FieldMonitor', () => {
     expect(within(topbar).queryByText('Schedule Status')).not.toBeInTheDocument();
     expect(within(topbar).queryByText('Cycle')).not.toBeInTheDocument();
     expect(screen.getByText('M42')).toBeInTheDocument();
-    expect(screen.getByText('Waiting for next start')).toBeInTheDocument();
+    expect(screen.queryByText('Waiting for next start')).not.toBeInTheDocument();
+    expect(screen.queryByText('Unknown')).not.toBeInTheDocument();
     expect(screen.getByText('254')).toBeInTheDocument();
     expect(screen.getByText('1114')).toBeInTheDocument();
     expect(mockUseFieldMonitorLiveData).toHaveBeenCalledWith({ mirrorLayout: true, reverseBlueTeams: true });
@@ -568,6 +569,17 @@ describe('FieldMonitor', () => {
 
     expect(panelGrid).toHaveClass('lg:h-full', 'lg:grid-rows-3');
     expect(firstRowCard).toHaveClass('lg:h-full');
+  });
+
+  it('keeps schedule and cycle stats on one desktop row with tighter non-xl spacing', () => {
+    renderFieldMonitor('/');
+
+    expect(screen.getByTestId('field-monitor-topbar-trend-group')).toHaveClass(
+      'sm:flex',
+      'sm:flex-nowrap',
+      'sm:gap-2',
+      'xl:gap-3'
+    );
   });
 
   it('keeps the whitespace-only compaction scoped to mobile framing and chrome', () => {

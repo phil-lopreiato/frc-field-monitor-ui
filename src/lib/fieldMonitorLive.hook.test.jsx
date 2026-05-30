@@ -373,7 +373,7 @@ describe('useFieldMonitorLiveData', () => {
     expect(revokeObjectURLSpy).toHaveBeenCalledWith('blob:recording');
   });
 
-  it('tracks completed and running cycle cadence from distinct match auto starts', async () => {
+  it('shows the previous cycle during a live match and switches to the current timer after the match', async () => {
     const hubFactory = createFakeHubFactory();
     const { result } = renderHook(() =>
       useFieldMonitorLiveData({
@@ -400,13 +400,14 @@ describe('useFieldMonitorLiveData', () => {
     });
 
     expect(result.current.cycleCadence.currentCycleLabel).toBe('0:00');
-    expect(result.current.cycleCadence.summary).toBe('0:00 running');
+    expect(result.current.cycleCadence.summary).toBe('');
 
     await act(async () => {
       await vi.advanceTimersByTimeAsync(4000);
     });
 
     expect(result.current.cycleCadence.currentCycleLabel).toBe('0:04');
+    expect(result.current.cycleCadence.summary).toBe('');
 
     act(() => {
       infrastructureHub.emit('matchStatusInfoChanged', {
@@ -433,15 +434,27 @@ describe('useFieldMonitorLiveData', () => {
     });
 
     expect(result.current.cycleCadence.lastCycleMs).toBe(65 * 1000);
-    expect(result.current.cycleCadence.lastCycleLabel).toBe('1m');
+    expect(result.current.cycleCadence.lastCycleLabel).toBe('1:05');
     expect(result.current.cycleCadence.currentCycleLabel).toBe('0:00');
-    expect(result.current.cycleCadence.summary).toBe('1m last | 0:00 run');
+    expect(result.current.cycleCadence.summary).toBe('1:05 cycle');
 
     await act(async () => {
       await vi.advanceTimersByTimeAsync(5000);
     });
 
     expect(result.current.cycleCadence.currentCycleLabel).toBe('0:05');
+    expect(result.current.cycleCadence.summary).toBe('1:05 cycle');
+
+    act(() => {
+      infrastructureHub.emit('matchStatusInfoChanged', {
+        MatchState: MatchStateType.WaitingForCommit,
+        MatchNumber: 43,
+        PlayNumber: 1,
+        TournamentLevel: 'Qualification',
+      });
+    });
+
+    expect(result.current.cycleCadence.summary).toBe('0:05 cycle');
   });
 
   it('downgrades the running cycle to in-progress after a visibility refresh reveals a newer match', async () => {
@@ -492,7 +505,7 @@ describe('useFieldMonitorLiveData', () => {
       await vi.advanceTimersByTimeAsync(5000);
     });
 
-    expect(result.current.cycleCadence.summary).toBe('1m last | 0:05 run');
+    expect(result.current.cycleCadence.summary).toBe('1:01 cycle');
     expect(result.current.cycleCadence.currentCycleTrust).toBe('observed');
 
     Object.defineProperty(document, 'hidden', {
@@ -507,7 +520,7 @@ describe('useFieldMonitorLiveData', () => {
     });
 
     expect(globalThis.fetch).toHaveBeenCalledTimes(2);
-    expect(result.current.cycleCadence.summary).toBe('1m last | in progress');
+    expect(result.current.cycleCadence.summary).toBe('1:01 cycle');
     expect(result.current.cycleCadence.currentCycleTrust).toBe('inferred');
     expect(result.current.cycleCadence.currentCycleLabel).toBe('');
 
@@ -520,7 +533,7 @@ describe('useFieldMonitorLiveData', () => {
       });
     });
 
-    expect(result.current.cycleCadence.summary).toBe('1m last | 0:00 run');
+    expect(result.current.cycleCadence.summary).toBe('1:01 cycle');
     expect(result.current.cycleCadence.currentCycleTrust).toBe('observed');
   });
 
@@ -582,8 +595,8 @@ describe('useFieldMonitorLiveData', () => {
     });
 
     expect(globalThis.fetch).toHaveBeenCalledTimes(2);
-    expect(result.current.cycleCadence.lastCycleLabel).toBe('1m');
-    expect(result.current.cycleCadence.summary).toBe('1m last | in progress');
+    expect(result.current.cycleCadence.lastCycleLabel).toBe('1:01');
+    expect(result.current.cycleCadence.summary).toBe('1:01 cycle');
     expect(result.current.cycleCadence.isCurrentCycleActive).toBe(true);
     expect(result.current.cycleCadence.isStartObserved).toBe(false);
   });
@@ -688,7 +701,7 @@ describe('useFieldMonitorLiveData', () => {
 
     expect(result.current.sourceMode).toBe('live');
     expect(result.current.replay.isReplayMode).toBe(false);
-    expect(result.current.scheduleStatus).toBe('Unknown');
+    expect(result.current.scheduleStatus).toBe('');
   });
 
   it('surfaces replay file parsing errors without leaving live mode', async () => {
