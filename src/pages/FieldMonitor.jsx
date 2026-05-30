@@ -89,12 +89,9 @@ function TopBarStat({ label, value, align = 'left', className = '', valueClassNa
     align === 'center' ? 'text-center' : align === 'right' ? 'text-right items-end' : 'text-left items-start';
 
   return (
-    <div className={`flex min-w-0 flex-col gap-0.5 ${textAlignmentClass} ${className}`}>
-      <div className="min-w-0 text-[8px] font-semibold uppercase leading-none tracking-[0.12em] text-zinc-500 [@media(max-width:380px)]:text-[7px] sm:text-[9px] [@media(min-width:1024px)_and_(max-height:860px)]:text-[8px] [@media(min-width:1024px)_and_(max-height:720px)]:text-[7px]">
-        {label}
-      </div>
+    <div className={`flex min-w-0 flex-col ${textAlignmentClass} ${className}`} aria-label={label}>
       <div
-        className={`min-w-0 ${wrapValue ? 'whitespace-normal leading-tight' : 'truncate'} text-[12px] font-bold tracking-[-0.02em] text-zinc-900 [@media(max-width:380px)]:text-[11px] sm:text-[15px] sm:leading-none [@media(min-width:1024px)_and_(max-height:860px)]:text-[13px] [@media(min-width:1024px)_and_(max-height:720px)]:text-[11px] ${valueClassName}`}
+        className={`min-w-0 ${wrapValue ? 'whitespace-normal leading-tight' : 'truncate'} text-[19px] font-bold tracking-[-0.03em] text-zinc-900 [@media(max-width:380px)]:text-[17px] sm:text-[26px] sm:leading-none [@media(min-width:1024px)_and_(max-height:860px)]:text-[22px] [@media(min-width:1024px)_and_(max-height:720px)]:text-[18px] ${valueClassName}`}
       >
         {value}
       </div>
@@ -368,7 +365,7 @@ export default function FieldMonitor() {
                   value={getMatchStatusValue(matchStatus)}
                   align="right"
                   className="relative z-10 min-w-0 sm:items-center sm:text-center"
-                  valueClassName="self-stretch overflow-hidden text-[11px] [@media(max-width:380px)]:text-[10px] sm:text-[14px] [@media(min-width:1024px)_and_(max-height:860px)]:text-[12px] [@media(min-width:1024px)_and_(max-height:720px)]:text-[10px]"
+                  valueClassName="self-stretch overflow-hidden text-[17px] [@media(max-width:380px)]:text-[15px] sm:text-[22px] [@media(min-width:1024px)_and_(max-height:860px)]:text-[19px] [@media(min-width:1024px)_and_(max-height:720px)]:text-[16px]"
                   wrapValue
                 />
               </div>
@@ -378,14 +375,14 @@ export default function FieldMonitor() {
                   value={scheduleStatus}
                   align="right"
                   className="min-w-0 flex-1"
-                  valueClassName="text-[10px] [@media(max-width:380px)]:text-[9px] sm:text-[13px] [@media(min-width:1024px)_and_(max-height:860px)]:text-[11px] [@media(min-width:1024px)_and_(max-height:720px)]:text-[10px]"
+                  valueClassName="text-[15px] [@media(max-width:380px)]:text-[13px] sm:text-[20px] [@media(min-width:1024px)_and_(max-height:860px)]:text-[17px] [@media(min-width:1024px)_and_(max-height:720px)]:text-[14px]"
                 />
                 <TopBarStat
                   label="Cycle"
                   value={cycleCadence.summary}
                   align="right"
                   className="min-w-0 flex-1"
-                  valueClassName="text-[9px] [@media(max-width:380px)]:text-[8px] sm:text-[12px] [@media(min-width:1024px)_and_(max-height:860px)]:text-[11px] [@media(min-width:1024px)_and_(max-height:720px)]:text-[9px]"
+                  valueClassName="text-[14px] [@media(max-width:380px)]:text-[12px] sm:text-[18px] [@media(min-width:1024px)_and_(max-height:860px)]:text-[16px] [@media(min-width:1024px)_and_(max-height:720px)]:text-[13px]"
                 />
               </div>
             </div>
@@ -394,7 +391,7 @@ export default function FieldMonitor() {
                 label="Schedule Status"
                 value={scheduleStatus}
                 className="min-w-0"
-                valueClassName="text-[11px] [@media(max-width:380px)]:text-[10px] sm:text-[14px] [@media(min-width:1024px)_and_(max-height:860px)]:text-[12px] [@media(min-width:1024px)_and_(max-height:720px)]:text-[10px]"
+                valueClassName="text-[17px] [@media(max-width:380px)]:text-[15px] sm:text-[22px] [@media(min-width:1024px)_and_(max-height:860px)]:text-[19px] [@media(min-width:1024px)_and_(max-height:720px)]:text-[16px]"
                 wrapValue
               />
             </div>

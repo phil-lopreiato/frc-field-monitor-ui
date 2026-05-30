@@ -1,5 +1,5 @@
 import { MemoryRouter } from 'react-router-dom';
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import FieldMonitor from './FieldMonitor';
@@ -133,11 +133,14 @@ describe('FieldMonitor', () => {
 
   it('renders the main top bar and forwards layout params from the query string', () => {
     renderFieldMonitor('/?mirror=true&reverseBlueTeams=true');
+    const topbar = screen.getByTestId('field-monitor-topbar');
 
-    expect(screen.getByText('Match Number')).toBeInTheDocument();
+    expect(topbar).toBeInTheDocument();
+    expect(within(topbar).queryByText('Match Number')).not.toBeInTheDocument();
+    expect(within(topbar).queryByText('Match Status')).not.toBeInTheDocument();
+    expect(within(topbar).queryByText('Schedule Status')).not.toBeInTheDocument();
+    expect(within(topbar).queryByText('Cycle')).not.toBeInTheDocument();
     expect(screen.getByText('M42')).toBeInTheDocument();
-    expect(screen.getAllByText('Schedule Status')).toHaveLength(2);
-    expect(screen.getByText('Cycle')).toBeInTheDocument();
     expect(screen.getByText('Waiting for next start')).toBeInTheDocument();
     expect(screen.getByText('254')).toBeInTheDocument();
     expect(screen.getByText('1114')).toBeInTheDocument();
