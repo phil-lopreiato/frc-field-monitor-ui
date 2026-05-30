@@ -1,0 +1,9 @@
+services:
+  field-monitor-ui:
+    image: phillopreiato/frc-field-monitor-v3beta
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      HOST: 0.0.0.0
+      PORT: 3000
+      FIELD_MONITOR_UPSTREAM_URL: "${FIELD_MONITOR_UPSTREAM_URL:-http://10.0.100.5}"

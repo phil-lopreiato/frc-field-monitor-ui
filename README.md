@@ -146,6 +146,29 @@ docker compose up --build
 
 By default this publishes `localhost:3000` and forwards to `FIELD_MONITOR_UPSTREAM_URL=http://10.0.100.5`. Override either value in `.env` before starting compose if needed.
 
+### Production Image
+
+`Dockerfile.prod` and `docker-compose.prod.yml` use the published image `phillopreiato/frc-field-monitor-v3beta` instead of rebuilding from local source.
+
+Build the thin prod wrapper image:
+
+```sh
+docker build -f Dockerfile.prod -t first-field-monitor:prod .
+```
+
+Or run the published image directly with Compose:
+
+```sh
+docker compose -f docker-compose.prod.yml up -d
+```
+
+The prod compose file keeps the same defaults as the local compose setup:
+
+- `3000:3000`
+- `HOST=0.0.0.0`
+- `PORT=3000`
+- `FIELD_MONITOR_UPSTREAM_URL=http://10.0.100.5`
+
 ## Live And Replay Workflow
 
 ### Live Monitor
