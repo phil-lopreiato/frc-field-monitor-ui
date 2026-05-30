@@ -471,8 +471,14 @@ function deriveNextCycleCadenceState(currentState, previousMatchStatus, nextMatc
 
 function reconcileCycleCadenceState(currentState, fetchedMatchStatus) {
   const fetchedMatchKey = createCycleMatchKey(fetchedMatchStatus);
+  const fetchedMatchState = Number(fetchedMatchStatus?.matchState);
 
-  if (!fetchedMatchKey || !currentState?.currentMatchKey || fetchedMatchKey === currentState.currentMatchKey) {
+  if (
+    !fetchedMatchKey ||
+    !currentState?.currentMatchKey ||
+    fetchedMatchKey === currentState.currentMatchKey ||
+    !isLiveMatchState(fetchedMatchState)
+  ) {
     return currentState;
   }
 

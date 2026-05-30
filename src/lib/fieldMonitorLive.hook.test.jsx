@@ -537,6 +537,80 @@ describe('useFieldMonitorLiveData', () => {
     expect(result.current.cycleCadence.currentCycleTrust).toBe('observed');
   });
 
+  it('keeps the observed cycle clock running when a visibility refresh advances match context before start', async () => {
+    globalThis.fetch = vi
+      .fn()
+      .mockResolvedValueOnce(createCurrentMatchResponse({ matchNumber: 42, playNumber: 1 }))
+      .mockResolvedValueOnce(createCurrentMatchResponse({ matchNumber: 44, playNumber: 1 }));
+
+    const hubFactory = createFakeHubFactory();
+    const { result } = renderHook(() =>
+      useFieldMonitorLiveData({
+        hubConnectionFactory: hubFactory.factory,
+      })
+    );
+
+    await waitFor(() => {
+      expect(result.current.isConnected).toBe(true);
+    });
+
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2024, 0, 2, 3, 4, 5));
+
+    const infrastructureHub = hubFactory.getHubByName('infrastructureHub');
+
+    act(() => {
+      infrastructureHub.emit('matchStatusInfoChanged', {
+        MatchState: MatchStateType.MatchAuto,
+        MatchNumber: 42,
+        PlayNumber: 1,
+        TournamentLevel: 'Qualification',
+      });
+    });
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(61 * 1000);
+    });
+
+    act(() => {
+      infrastructureHub.emit('matchStatusInfoChanged', {
+        MatchState: MatchStateType.MatchAuto,
+        MatchNumber: 43,
+        PlayNumber: 1,
+        TournamentLevel: 'Qualification',
+      });
+    });
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(5000);
+    });
+
+    act(() => {
+      infrastructureHub.emit('matchStatusInfoChanged', {
+        MatchState: MatchStateType.WaitingForCommit,
+        MatchNumber: 43,
+        PlayNumber: 1,
+        TournamentLevel: 'Qualification',
+      });
+    });
+
+    Object.defineProperty(document, 'hidden', {
+      configurable: true,
+      value: false,
+    });
+
+    await act(async () => {
+      document.dispatchEvent(new Event('visibilitychange'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    expect(globalThis.fetch).toHaveBeenCalledTimes(2);
+    expect(result.current.cycleCadence.currentCycleTrust).toBe('observed');
+    expect(result.current.cycleCadence.currentCycleLabel).toBe('0:05');
+    expect(result.current.cycleCadence.summary).toBe('0:05 cycle');
+  });
+
   it('reconciles a missed start after infrastructure reconnect without losing the last completed cycle', async () => {
     globalThis.fetch = vi
       .fn()
