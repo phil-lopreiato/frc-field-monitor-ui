@@ -1,6 +1,6 @@
 services:
   field-monitor-ui:
-    image: phillopreiato/frc-field-monitor-v3beta
+    image: docker.io/phillopreiato/frc-field-monitor-v3beta
     ports:
       - "${PORT:-3000}:3000"
     environment:

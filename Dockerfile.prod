@@ -1,4 +1,4 @@
-FROM phillopreiato/frc-field-monitor-v3beta
+FROM docker.io/phillopreiato/frc-field-monitor-v3beta
 
 ENV HOST=0.0.0.0
 ENV PORT=3000

@@ -148,7 +148,7 @@ By default this publishes `localhost:3000` and forwards to `FIELD_MONITOR_UPSTRE
 
 ### Production Image
 
-`Dockerfile.prod` and `docker-compose.prod.yml` use the published image `phillopreiato/frc-field-monitor-v3beta` instead of rebuilding from local source.
+`Dockerfile.prod` and `docker-compose.prod.yml` use the published image `docker.io/phillopreiato/frc-field-monitor-v3beta` instead of rebuilding from local source.
 
 Build the thin prod wrapper image:
 
