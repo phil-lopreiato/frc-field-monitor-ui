@@ -73,6 +73,10 @@ const clampRadioBars = (bars) => {
   if (!Number.isFinite(bars)) return 0;
   return Math.max(0, Math.min(4, bars));
 };
+const radioVisualState = (radio) => {
+  if (radio?.state !== 'warn') return radio?.state || 'good';
+  return radio?.connectedToAp && radio?.linkActive ? 'good' : 'warn';
+};
 const formatDisconnectTimer = (elapsedMs) => {
   const totalSeconds = Math.max(0, Math.floor(elapsedMs / 1000));
   const hours = Math.floor(totalSeconds / 3600);
@@ -432,6 +436,7 @@ function StationBadge({ station, theme }) {
 
 export default function TeamStatusCard({ alliance, row, currentTimeMs = Date.now() }) {
   const theme = panelTheme(alliance);
+  const radioState = radioVisualState(row.radio);
   const isBlocking = row.mode === 'blocking';
   const isBypassed = row.mode === 'bypassed';
   const isEmergencyStop = isEmergencyStopMode(row.mode);
@@ -523,10 +528,10 @@ export default function TeamStatusCard({ alliance, row, currentTimeMs = Date.now
               <MobileConnectionChip
                 kind="radio"
                 label={row.radio?.label || 'RADIO'}
-                state={row.radio?.state || 'good'}
+                state={radioState}
                 bars={row.radio?.bars ?? 0}
               />
-              <MobileChainSeparator state={row.radio?.state || 'good'} />
+              <MobileChainSeparator state={radioState} />
               <MobileConnectionChip
                 kind="rio"
                 label={row.rio?.label || 'RIO'}
@@ -546,10 +551,10 @@ export default function TeamStatusCard({ alliance, row, currentTimeMs = Date.now
               <ConnectionTile
                 kind="radio"
                 label={row.radio?.label || 'RADIO'}
-                state={row.radio?.state || 'good'}
+                state={radioState}
                 bars={row.radio?.bars ?? 0}
               />
-              <ConnectionChevron state={row.radio?.state || 'good'} />
+              <ConnectionChevron state={radioState} />
               <ConnectionTile
                 kind="rio"
                 label={row.rio?.label || 'RIO'}

@@ -80,7 +80,7 @@ const showcaseSections = [
       },
       {
         title: 'Low Radio Signal',
-        subtitle: 'Radio quality is marginal, with the warning shell and reduced bars.',
+        subtitle: 'Radio quality is marginal, with reduced bars but no connection-path warning shell.',
         alliance: 'blue',
         row: createRow({
           team: '2056',

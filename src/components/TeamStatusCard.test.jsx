@@ -67,6 +67,53 @@ describe('TeamStatusCard', () => {
     expect(screen.queryByText('LINK')).not.toBeInTheDocument();
   });
 
+  it('keeps the radio cell neutral when low signal is the only warning', () => {
+    render(
+      <TeamStatusCard
+        alliance="blue"
+        row={createRow({
+          mode: 'degraded',
+          radio: {
+            label: 'Radio',
+            state: 'warn',
+            detail: '2 bars',
+            bars: 2,
+            connectedToAp: true,
+            linkActive: true,
+          },
+        })}
+      />
+    );
+
+    const radioChip = screen.getAllByTestId('mobile-connection-chip')[1];
+
+    expect(radioChip).toHaveClass('border-zinc-300', 'bg-white', 'text-zinc-900');
+    expect(radioChip).not.toHaveClass('border-amber-500', 'bg-amber-100', 'text-amber-950');
+  });
+
+  it('keeps the yellow radio cell for connection path warnings', () => {
+    render(
+      <TeamStatusCard
+        alliance="blue"
+        row={createRow({
+          mode: 'degraded',
+          radio: {
+            label: 'Radio',
+            state: 'warn',
+            detail: '4 bars',
+            bars: 4,
+            connectedToAp: true,
+            linkActive: false,
+          },
+        })}
+      />
+    );
+
+    const radioChip = screen.getAllByTestId('mobile-connection-chip')[1];
+
+    expect(radioChip).toHaveClass('border-amber-500', 'bg-amber-100', 'text-amber-950');
+  });
+
   it('keeps bypass affordances emphasized while muting the connection and footer sections', () => {
     render(
       <TeamStatusCard
