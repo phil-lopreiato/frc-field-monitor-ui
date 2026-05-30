@@ -243,7 +243,7 @@ function DisconnectTimerBadge({ elapsedMs }) {
   return (
     <div
       data-testid="disconnect-timer-badge"
-      className="rounded-md bg-amber-50 px-1.5 py-0.5 font-mono text-[12px] font-black leading-[1.1] text-amber-950 sm:px-2.5 sm:py-1 sm:text-[14px] [@media(min-width:1024px)]:text-[15px] [@media(min-width:1024px)_and_(max-height:860px)]:px-2 [@media(min-width:1024px)_and_(max-height:860px)]:py-0.5 [@media(min-width:1024px)_and_(max-height:860px)]:text-[12px] [@media(min-width:1024px)_and_(max-height:720px)]:px-1.5 [@media(min-width:1024px)_and_(max-height:720px)]:text-[11px]"
+      className="rounded-md bg-amber-50 px-1.5 py-0.5 font-mono text-[13px] font-black leading-[1.1] text-amber-950 sm:px-2.5 sm:py-1 sm:text-[15px] [@media(min-width:1024px)]:text-[16px] [@media(min-width:1024px)_and_(max-height:860px)]:px-2 [@media(min-width:1024px)_and_(max-height:860px)]:py-0.5 [@media(min-width:1024px)_and_(max-height:860px)]:text-[13px] [@media(min-width:1024px)_and_(max-height:720px)]:px-1.5 [@media(min-width:1024px)_and_(max-height:720px)]:text-[12px]"
       aria-label={`Disconnected for ${formatDisconnectTimer(elapsedMs)}`}
     >
       {formatDisconnectTimer(elapsedMs)}
