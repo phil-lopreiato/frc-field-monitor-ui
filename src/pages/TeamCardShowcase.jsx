@@ -115,13 +115,13 @@ const showcaseSections = [
       },
       {
         title: 'Brownout Risk',
-        subtitle: 'A critical battery state with alert treatment in the footer.',
+        subtitle: 'A battery warning state with alert treatment in the footer.',
         alliance: 'blue',
         row: createRow({
           team: '4414',
           station: 'Stn 1',
-          mode: 'critical',
-          battery: { value: '6.8V', min: '6.4', tone: 'critical', action: 'BROWNOUT', detail: 'Unsafe' },
+          mode: 'degraded',
+          battery: { value: '6.8V', min: '6.4', tone: 'warn', action: 'BROWNOUT', detail: 'Unsafe' },
           bwu: { value: '2.7 Mbps', tx: '1.1', rx: '1.6' },
           trip: '29 ms',
           pkts: '16',

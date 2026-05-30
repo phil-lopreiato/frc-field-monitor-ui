@@ -896,7 +896,7 @@ function getBatteryInfo(station) {
     return {
       value: formatBattery(currentBattery),
       min: minBattery,
-      tone: 'critical',
+      tone: 'warn',
       action: 'BROWNOUT',
       detail: 'Robot is browning out now',
     };
@@ -953,9 +953,9 @@ function getRowMode(station, matchStatus) {
   const hasCriticalConnection =
     isLiveMatch &&
     (!station.connection || !station.rioLink || (!station.radioConnectedToAp && !station.linkActive));
-  const hasCriticalPerformance = station.brownout;
+  const hasWarningPerformance = station.brownout;
 
-  if (hasCriticalConnection || hasCriticalPerformance) {
+  if (hasCriticalConnection) {
     return 'critical';
   }
 
@@ -966,7 +966,7 @@ function getRowMode(station, matchStatus) {
       (station.rioLink && !station.linkActive) ||
       (station.radioConnectedToAp && station.radioConnectionQuality <= RadioConnectionQuality.Caution));
 
-  if (hasWarningConnection) {
+  if (hasWarningConnection || hasWarningPerformance) {
     return 'degraded';
   }
 

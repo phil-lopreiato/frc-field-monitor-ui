@@ -394,10 +394,10 @@ describe('fieldMonitorLive helpers', () => {
     expect(brownoutRow.battery).toMatchObject({
       value: '7.0V',
       min: '7.0',
-      tone: 'critical',
+      tone: 'warn',
       action: 'BROWNOUT',
     });
-    expect(brownoutRow.mode).toBe('critical');
+    expect(brownoutRow.mode).toBe('degraded');
   });
 
   it('exposes explicit radio bars and live link flags in row data', () => {
@@ -550,7 +550,7 @@ describe('fieldMonitorLive helpers', () => {
       value: '12.4V',
       min: '12.1',
       action: 'BROWNOUT',
-      tone: 'critical',
+      tone: 'warn',
     });
     expect(row.evidence.flags).toEqual(
       expect.arrayContaining([

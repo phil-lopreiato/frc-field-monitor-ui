@@ -42,11 +42,11 @@ const heroRows = [
     row: createRow({
       team: '4414',
       station: 'Stn 1',
-      mode: 'critical',
+      mode: 'degraded',
       status: { label: 'Teleop Enabled', shortLabel: 'TELEOP', tone: 'tele' },
       radio: { label: 'Radio', state: 'bad', detail: '0 bars', bars: 0, connectedToAp: false, linkActive: false },
       rio: { label: 'RIO', state: 'bad', detail: 'Disconnected' },
-      battery: { value: '6.8V', min: '6.4', tone: 'critical', action: 'BROWNOUT', detail: 'Unsafe' },
+      battery: { value: '6.8V', min: '6.4', tone: 'warn', action: 'BROWNOUT', detail: 'Unsafe' },
       bwu: { value: '2.7 Mbps', tx: '1.1', rx: '1.6' },
       trip: '65 ms',
       pkts: '74',

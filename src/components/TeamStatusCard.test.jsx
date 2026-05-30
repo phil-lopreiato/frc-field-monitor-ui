@@ -199,10 +199,10 @@ describe('TeamStatusCard', () => {
         alliance="blue"
         currentTimeMs={75_000}
         row={createRow({
-          mode: 'critical',
+          mode: 'degraded',
           hasCriticalConnection: false,
           disconnectedSinceMs: 10_000,
-          battery: { value: '6.8V', min: '6.4', tone: 'critical', action: 'BROWNOUT', detail: 'Unsafe' },
+          battery: { value: '6.8V', min: '6.4', tone: 'warn', action: 'BROWNOUT', detail: 'Unsafe' },
         })}
       />
     );
