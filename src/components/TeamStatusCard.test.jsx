@@ -17,6 +17,8 @@ function createRow(overrides = {}) {
     trip: '7 ms',
     pkts: '1',
     blockingText: '',
+    hasCriticalConnection: false,
+    disconnectedSinceMs: null,
     history: { battery: [], bandwidth: [], trip: [] },
     ...overrides,
   };
@@ -126,5 +128,38 @@ describe('TeamStatusCard', () => {
 
     expect(batteryTile).toHaveClass('bg-white/80');
     expect(batteryTile).not.toHaveClass('ring-2', 'ring-amber-300', 'ring-amber-400');
+  });
+
+  it('shows a disconnect timer next to the critical badge only for armed critical connection loss', () => {
+    render(
+      <TeamStatusCard
+        alliance="red"
+        currentTimeMs={75_000}
+        row={createRow({
+          mode: 'critical',
+          hasCriticalConnection: true,
+          disconnectedSinceMs: 10_000,
+        })}
+      />
+    );
+
+    expect(screen.getByTestId('disconnect-timer-badge')).toHaveTextContent('1:05');
+  });
+
+  it('keeps the disconnect timer hidden for non-connection critical rows', () => {
+    render(
+      <TeamStatusCard
+        alliance="blue"
+        currentTimeMs={75_000}
+        row={createRow({
+          mode: 'critical',
+          hasCriticalConnection: false,
+          disconnectedSinceMs: 10_000,
+          battery: { value: '6.8V', min: '6.4', tone: 'critical', action: 'BROWNOUT', detail: 'Unsafe' },
+        })}
+      />
+    );
+
+    expect(screen.queryByTestId('disconnect-timer-badge')).not.toBeInTheDocument();
   });
 });

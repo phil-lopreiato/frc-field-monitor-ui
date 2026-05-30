@@ -34,6 +34,8 @@ function createRow(overrides = {}) {
     trip: '7 ms',
     pkts: '1',
     blockingText: '',
+    hasCriticalConnection: false,
+    disconnectedSinceMs: null,
     history: { battery: [], bandwidth: [], trip: [] },
     ...overrides,
   };
@@ -91,6 +93,7 @@ function createHookState(overrides = {}) {
     sourceMode: 'live',
     isConnected: true,
     isFieldReady: false,
+    currentTimeMs: 0,
     error: '',
     ...overrides,
     replay: nextReplay,
@@ -664,6 +667,26 @@ describe('FieldMonitor', () => {
     expect(mobileConnectionLayout).toHaveClass('pb-0');
     expect(mobileFooterSummary).not.toHaveClass('min-[381px]:max-sm:py-0.5');
     expect(mobileFooterSummary).toHaveClass('py-px');
+  });
+
+  it('renders the disconnect timer beside a critical connection alert', () => {
+    mockUseFieldMonitorLiveData.mockReturnValue(
+      createHookState({
+        currentTimeMs: 75_000,
+        alliancePanels: [
+          {
+            alliance: 'red',
+            title: 'Red Alliance',
+            rows: [createRow({ mode: 'critical', hasCriticalConnection: true, disconnectedSinceMs: 10_000 })],
+          },
+          { alliance: 'blue', title: 'Blue Alliance', rows: [createRow({ team: '1114' })] },
+        ],
+      })
+    );
+
+    renderFieldMonitor('/');
+
+    expect(screen.getByTestId('disconnect-timer-badge')).toHaveTextContent('1:05');
   });
 
   it('allows replay load errors to be dismissed locally', async () => {

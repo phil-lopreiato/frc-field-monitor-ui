@@ -967,13 +967,76 @@ function getRowMode(station, matchStatus) {
   return 'normal';
 }
 
-function toRow(station, matchStatus, metricHistory) {
+function hasCriticalConnectionLoss(station) {
+  return !station.connection || !station.rioLink || (!station.radioConnectedToAp && !station.linkActive);
+}
+
+function createDisconnectTimerEntry(previousEntry = {}) {
+  return {
+    isArmed: Boolean(previousEntry.isArmed),
+    teamNumber: Number(previousEntry.teamNumber) || 0,
+    disconnectedSinceMs:
+      Number.isFinite(previousEntry.disconnectedSinceMs) && previousEntry.disconnectedSinceMs >= 0
+        ? previousEntry.disconnectedSinceMs
+        : null,
+  };
+}
+
+export function deriveStationDisconnectTiming(previousTiming, stations, observedAtMs) {
+  const nextTiming = new Map();
+  const currentTiming = previousTiming instanceof Map ? previousTiming : new Map();
+  const normalizedObservedAtMs = Number.isFinite(observedAtMs) ? observedAtMs : 0;
+
+  ALL_STATION_SLOTS.forEach((slot) => {
+    const key = slotKey(slot.alliance, slot.station);
+    const station =
+      stations?.find((candidate) => candidate.alliance === slot.alliance && candidate.station === slot.station) ??
+      createEmptyStation(slot.alliance, slot.station);
+    const previousEntry = createDisconnectTimerEntry(currentTiming.get(key));
+    const hasSameTeam = previousEntry.teamNumber > 0 && previousEntry.teamNumber === station.teamNumber;
+
+    if (!(station.teamNumber > 0) || station.isBypassed) {
+      nextTiming.set(key, createDisconnectTimerEntry());
+      return;
+    }
+
+    if (isStationFieldReady(station)) {
+      nextTiming.set(key, {
+        isArmed: true,
+        teamNumber: station.teamNumber,
+        disconnectedSinceMs: null,
+      });
+      return;
+    }
+
+    if (hasSameTeam && previousEntry.isArmed && hasCriticalConnectionLoss(station)) {
+      nextTiming.set(key, {
+        isArmed: true,
+        teamNumber: station.teamNumber,
+        disconnectedSinceMs: previousEntry.disconnectedSinceMs ?? normalizedObservedAtMs,
+      });
+      return;
+    }
+
+    nextTiming.set(key, {
+      isArmed: hasSameTeam ? previousEntry.isArmed : false,
+      teamNumber: station.teamNumber,
+      disconnectedSinceMs: hasSameTeam ? previousEntry.disconnectedSinceMs : null,
+    });
+  });
+
+  return nextTiming;
+}
+
+function toRow(station, matchStatus, metricHistory, disconnectTiming) {
   const blockingText = getBlockingText(station);
   const status = getStatusInfo(station);
   const battery = getBatteryInfo(station);
   const mode = getRowMode(station, matchStatus);
   const isPostMatchMuted = shouldMutePostMatchDisconnects(station, matchStatus);
   const hist = metricHistory?.get(slotKey(station.alliance, station.station));
+  const disconnectEntry = disconnectTiming?.get(slotKey(station.alliance, station.station));
+  const hasCriticalConnection = hasCriticalConnectionLoss(station);
 
   return {
     team: station.teamNumber > 0 ? String(station.teamNumber) : '----',
@@ -993,6 +1056,11 @@ function toRow(station, matchStatus, metricHistory) {
     trip: `${Math.round(station.averageTripTime)} ms`,
     pkts: String(Math.round(station.lostPackets)),
     blockingText: mode === 'blocking' ? blockingText : '',
+    hasCriticalConnection,
+    disconnectedSinceMs:
+      Number.isFinite(disconnectEntry?.disconnectedSinceMs) && disconnectEntry.disconnectedSinceMs >= 0
+        ? disconnectEntry.disconnectedSinceMs
+        : null,
     history: {
       battery: hist?.battery?.slice() ?? [],
       bandwidth: hist?.bandwidth?.slice() ?? [],
@@ -1176,13 +1244,13 @@ function toDiagnosticsRow(station, matchStatus, metricHistory) {
   };
 }
 
-export function buildPanels(stations, mirrorLayout, reverseBlueTeams, matchStatus, metricHistory) {
+export function buildPanels(stations, mirrorLayout, reverseBlueTeams, matchStatus, metricHistory, disconnectTiming) {
   const { grouped, orderedKeys } = orderAlliancePanels(stations, mirrorLayout, reverseBlueTeams);
 
   return orderedKeys.map((alliance) => ({
     alliance,
     title: alliance === 'red' ? 'Red Alliance' : 'Blue Alliance',
-    rows: grouped[alliance].map((station) => toRow(station, matchStatus, metricHistory)),
+    rows: grouped[alliance].map((station) => toRow(station, matchStatus, metricHistory, disconnectTiming)),
   }));
 }
 
@@ -1240,6 +1308,7 @@ export function useFieldMonitorLiveData({
   const baseUrl = getBaseUrl();
   const minBatteryRef = useRef(new Map());
   const metricHistoryRef = useRef(new Map());
+  const disconnectTimingRef = useRef(new Map());
   const currentMatchRef = useRef(null);
   const isMountedRef = useRef(true);
   const matchStatusRef = useRef(normalizeMatchStatus());
@@ -1293,6 +1362,7 @@ export function useFieldMonitorLiveData({
     lastDownloadName: '',
     lastEventCount: 0,
   });
+  const [currentTimeMs, setCurrentTimeMs] = useState(() => Date.now());
 
   useEffect(() => {
     sourceModeRef.current = sourceMode;
@@ -1327,6 +1397,7 @@ export function useFieldMonitorLiveData({
     const snapshotMatchStatus = coerceMatchStatusSnapshot(recording?.initialState?.matchStatus);
     minBatteryRef.current = createMinBatteryMap(snapshotStations);
     metricHistoryRef.current.clear();
+    disconnectTimingRef.current = deriveStationDisconnectTiming(new Map(), snapshotStations, 0);
     currentMatchRef.current = recording?.initialState?.currentMatch ?? null;
     matchStatusRef.current = snapshotMatchStatus;
     cycleCadenceStateRef.current = createUnknownCycleCadenceState();
@@ -1361,7 +1432,7 @@ export function useFieldMonitorLiveData({
   }, []);
 
   const applyStationData = useCallback(
-    (dataArray, { shouldRecord = false } = {}) => {
+    (dataArray, { shouldRecord = false, observedAtMs = null } = {}) => {
       if (shouldRecord) {
         recordIncomingEvent('fieldHub', 'fieldMonitorDataChanged', dataArray || []);
       }
@@ -1390,7 +1461,13 @@ export function useFieldMonitorLiveData({
         if (hist.bandwidth.length > METRIC_HISTORY_SIZE) hist.bandwidth.shift();
       });
 
-      setStations(ALL_STATION_SLOTS.map((slot) => stationMap.get(slotKey(slot.alliance, slot.station))));
+      const nextStations = ALL_STATION_SLOTS.map((slot) => stationMap.get(slotKey(slot.alliance, slot.station)));
+      disconnectTimingRef.current = deriveStationDisconnectTiming(
+        disconnectTimingRef.current,
+        nextStations,
+        Number.isFinite(observedAtMs) ? observedAtMs : Date.now()
+      );
+      setStations(nextStations);
     },
     [recordIncomingEvent]
   );
@@ -1604,7 +1681,7 @@ export function useFieldMonitorLiveData({
   const dispatchReplayEvent = useCallback(
     (entry) => {
       if (entry.source === 'fieldHub' && entry.event === 'fieldMonitorDataChanged') {
-        applyStationData(entry.payload, { shouldRecord: false });
+        applyStationData(entry.payload, { shouldRecord: false, observedAtMs: Number(entry.t) || 0 });
         return;
       }
 
@@ -1779,6 +1856,7 @@ export function useFieldMonitorLiveData({
     };
     minBatteryRef.current.clear();
     metricHistoryRef.current.clear();
+    disconnectTimingRef.current = new Map();
     currentMatchRef.current = null;
     matchStatusRef.current = normalizeMatchStatus();
     cycleCadenceStateRef.current = createUnknownCycleCadenceState();
@@ -1790,6 +1868,7 @@ export function useFieldMonitorLiveData({
     setAheadBehind(createUnknownAheadBehindState());
     setCycleCadenceState(createUnknownCycleCadenceState());
     setCycleClockMs(null);
+    setCurrentTimeMs(Date.now());
     setError('');
     setIsFieldHubConnected(false);
     setIsInfrastructureHubConnected(false);
@@ -1817,7 +1896,7 @@ export function useFieldMonitorLiveData({
 
     function handleStationData(dataArray) {
       if (isMounted) {
-        applyStationData(dataArray, { shouldRecord: true });
+        applyStationData(dataArray, { shouldRecord: true, observedAtMs: Date.now() });
       }
     }
 
@@ -1954,6 +2033,40 @@ export function useFieldMonitorLiveData({
   }, [clearReplayTimer, replayRecording, replayState.isPlaying, replayState.speed, scheduleReplay, sourceMode]);
 
   useEffect(() => {
+    if (typeof window === 'undefined') {
+      setCurrentTimeMs(sourceMode === 'replay' ? replayState.currentTimeMs : Date.now());
+      return undefined;
+    }
+
+    const readCurrentTimeMs = () => {
+      if (sourceMode === 'replay') {
+        if (!replayState.isPlaying) {
+          return replayState.currentTimeMs;
+        }
+
+        return Math.min(getCurrentReplayPositionMs(), replayState.durationMs);
+      }
+
+      return Date.now();
+    };
+
+    const updateCurrentTime = () => {
+      setCurrentTimeMs(readCurrentTimeMs());
+    };
+
+    updateCurrentTime();
+
+    if (sourceMode === 'replay' && !replayState.isPlaying) {
+      return undefined;
+    }
+
+    const intervalId = window.setInterval(updateCurrentTime, 1000);
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [getCurrentReplayPositionMs, replayState.currentTimeMs, replayState.durationMs, replayState.isPlaying, sourceMode]);
+
+  useEffect(() => {
     if (!Number.isFinite(cycleCadenceState.currentCycleStartMs) || cycleCadenceState.currentCycleStartMs < 0) {
       setCycleClockMs(null);
       return undefined;
@@ -1995,7 +2108,7 @@ export function useFieldMonitorLiveData({
   ]);
 
   const alliancePanels = useMemo(
-    () => buildPanels(stations, mirrorLayout, reverseBlueTeams, matchStatus, metricHistoryRef.current),
+    () => buildPanels(stations, mirrorLayout, reverseBlueTeams, matchStatus, metricHistoryRef.current, disconnectTimingRef.current),
     [matchStatus, mirrorLayout, reverseBlueTeams, stations]
   );
   const diagnosticsPanels = useMemo(
@@ -2027,6 +2140,7 @@ export function useFieldMonitorLiveData({
     isAheadBehindKnown: aheadBehind.isKnown,
     scheduleStatus,
     cycleCadence,
+    currentTimeMs,
     error,
     isConnected: sourceMode === 'live' && isFieldHubConnected && isInfrastructureHubConnected,
     isFieldReady,

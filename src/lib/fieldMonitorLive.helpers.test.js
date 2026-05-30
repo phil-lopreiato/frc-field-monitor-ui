@@ -4,6 +4,7 @@ import {
   buildPanels,
   createEmptyStation,
   createRecordingFilename,
+  deriveStationDisconnectTiming,
   fieldMonitorTypes,
   getReplayDurationMs,
   isFieldReadyState,
@@ -433,6 +434,80 @@ describe('fieldMonitorLive helpers', () => {
     const row = createHealthyRow();
 
     expect(row).not.toHaveProperty('secondaryText');
+  });
+
+  it('arms disconnect timers only after a station has been fully connected once', () => {
+    const slot = { alliance: AllianceType.Red, station: StationType.Station1 };
+    const disconnectedStation = createStation(slot.alliance, slot.station, {
+      connection: false,
+      rioLink: false,
+      linkActive: false,
+      radioConnectedToAp: false,
+    });
+    const healthyStation = createStation(slot.alliance, slot.station, {
+      connection: true,
+      dsLinkActive: true,
+      rioLink: true,
+      linkActive: true,
+      radioConnectedToAp: true,
+    });
+
+    const disconnectedFirst = deriveStationDisconnectTiming(new Map(), [disconnectedStation], 5_000);
+    const disconnectedFirstRow = buildPanels(
+      [disconnectedStation],
+      true,
+      false,
+      normalizeMatchStatus({ MatchState: MatchStateType.MatchTeleop }),
+      undefined,
+      disconnectedFirst
+    )[0].rows[0];
+
+    expect(disconnectedFirstRow.disconnectedSinceMs).toBeNull();
+
+    const armed = deriveStationDisconnectTiming(disconnectedFirst, [healthyStation], 8_000);
+    const disconnectedAfterArm = deriveStationDisconnectTiming(armed, [disconnectedStation], 12_000);
+    const disconnectedAfterArmRow = buildPanels(
+      [disconnectedStation],
+      true,
+      false,
+      normalizeMatchStatus({ MatchState: MatchStateType.MatchTeleop }),
+      undefined,
+      disconnectedAfterArm
+    )[0].rows[0];
+
+    expect(disconnectedAfterArmRow.hasCriticalConnection).toBe(true);
+    expect(disconnectedAfterArmRow.disconnectedSinceMs).toBe(12_000);
+  });
+
+  it('does not carry a prior team disconnect arm state into a new team in the same slot', () => {
+    const healthyFirstTeam = createStation(AllianceType.Red, StationType.Station1, {
+      teamNumber: 254,
+      connection: true,
+      dsLinkActive: true,
+      rioLink: true,
+      linkActive: true,
+      radioConnectedToAp: true,
+    });
+    const disconnectedNextTeam = createStation(AllianceType.Red, StationType.Station1, {
+      teamNumber: 1678,
+      connection: false,
+      rioLink: false,
+      linkActive: false,
+      radioConnectedToAp: false,
+    });
+
+    const armedFirstTeam = deriveStationDisconnectTiming(new Map(), [healthyFirstTeam], 5_000);
+    const nextTeamTiming = deriveStationDisconnectTiming(armedFirstTeam, [disconnectedNextTeam], 9_000);
+    const nextTeamRow = buildPanels(
+      [disconnectedNextTeam],
+      true,
+      false,
+      normalizeMatchStatus({ MatchState: MatchStateType.MatchTeleop }),
+      undefined,
+      nextTeamTiming
+    )[0].rows[0];
+
+    expect(nextTeamRow.disconnectedSinceMs).toBeNull();
   });
 
   it('builds diagnostics rows with grouped always-visible supporting data', () => {

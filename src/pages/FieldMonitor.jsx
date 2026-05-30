@@ -201,6 +201,7 @@ export default function FieldMonitor() {
     aheadBehind,
     isAheadBehindKnown,
     isConnected,
+    currentTimeMs,
   } = useFieldMonitorLiveData({
     mirrorLayout,
     reverseBlueTeams,
@@ -429,6 +430,7 @@ export default function FieldMonitor() {
                     key={`distance-${panel.alliance}-${row.team}-${row.station}`}
                     alliance={panel.alliance}
                     row={row}
+                    currentTimeMs={currentTimeMs}
                   />
                 ))}
               </div>

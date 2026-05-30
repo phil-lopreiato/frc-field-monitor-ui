@@ -73,6 +73,18 @@ const clampRadioBars = (bars) => {
   if (!Number.isFinite(bars)) return 0;
   return Math.max(0, Math.min(4, bars));
 };
+const formatDisconnectTimer = (elapsedMs) => {
+  const totalSeconds = Math.max(0, Math.floor(elapsedMs / 1000));
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  if (hours > 0) {
+    return `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  }
+
+  return `${minutes}:${String(seconds).padStart(2, '0')}`;
+};
 
 const connectionTheme = (state) => {
   if (state === 'bad') {
@@ -223,6 +235,18 @@ function IssueBadge({ mode }) {
       }`}
     >
       {issueLabel(mode)}
+    </div>
+  );
+}
+
+function DisconnectTimerBadge({ elapsedMs }) {
+  return (
+    <div
+      data-testid="disconnect-timer-badge"
+      className="rounded-md bg-amber-50 px-1.5 py-0.5 font-mono text-[12px] font-black leading-[1.1] text-amber-950 sm:px-2.5 sm:py-1 sm:text-[14px] [@media(min-width:1024px)]:text-[15px] [@media(min-width:1024px)_and_(max-height:860px)]:px-2 [@media(min-width:1024px)_and_(max-height:860px)]:py-0.5 [@media(min-width:1024px)_and_(max-height:860px)]:text-[12px] [@media(min-width:1024px)_and_(max-height:720px)]:px-1.5 [@media(min-width:1024px)_and_(max-height:720px)]:text-[11px]"
+      aria-label={`Disconnected for ${formatDisconnectTimer(elapsedMs)}`}
+    >
+      {formatDisconnectTimer(elapsedMs)}
     </div>
   );
 }
@@ -406,7 +430,7 @@ function StationBadge({ station, theme }) {
   );
 }
 
-export default function TeamStatusCard({ alliance, row }) {
+export default function TeamStatusCard({ alliance, row, currentTimeMs = Date.now() }) {
   const theme = panelTheme(alliance);
   const isBlocking = row.mode === 'blocking';
   const isBypassed = row.mode === 'bypassed';
@@ -415,6 +439,10 @@ export default function TeamStatusCard({ alliance, row }) {
   const isContentMuted = isPostMatchMuted || isEmergencyStop;
   const isStatusPillMuted = isPostMatchMuted;
   const isNormal = row.mode === 'normal';
+  const disconnectElapsedMs =
+    Number.isFinite(row.disconnectedSinceMs) && Number.isFinite(currentTimeMs)
+      ? Math.max(0, currentTimeMs - row.disconnectedSinceMs)
+      : null;
 
   return (
     <div
@@ -448,6 +476,9 @@ export default function TeamStatusCard({ alliance, row }) {
           </div>
           <StationBadge station={row.station} theme={theme} />
           {row.mode !== 'blocking' && <IssueBadge mode={row.mode} />}
+          {row.mode === 'critical' && row.hasCriticalConnection && disconnectElapsedMs !== null ? (
+            <DisconnectTimerBadge elapsedMs={disconnectElapsedMs} />
+          ) : null}
         </div>
 
         {!isBlocking && !isBypassed && (
