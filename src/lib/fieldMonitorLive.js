@@ -904,16 +904,6 @@ function getBatteryInfo(station) {
     };
   }
 
-  if (currentBattery > 0 && currentBattery <= 7.0) {
-    return {
-      value: formatBattery(currentBattery),
-      min: minBattery,
-      tone: 'critical',
-      action: 'LOW BATT',
-      detail: 'Brownout risk',
-    };
-  }
-
   return {
     value: formatBattery(currentBattery),
     min: minBattery,
@@ -965,9 +955,7 @@ function getRowMode(station, matchStatus) {
   const hasCriticalConnection =
     isLiveMatch &&
     (!station.connection || !station.rioLink || (!station.radioConnectedToAp && !station.linkActive));
-  const hasCriticalPerformance =
-    station.brownout ||
-    (station.battery > 0 && station.battery <= 7.0);
+  const hasCriticalPerformance = station.brownout;
 
   if (hasCriticalConnection || hasCriticalPerformance) {
     return 'critical';

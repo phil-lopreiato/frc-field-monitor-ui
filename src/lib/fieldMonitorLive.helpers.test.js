@@ -379,19 +379,24 @@ describe('fieldMonitorLive helpers', () => {
     });
   });
 
-  it('treats battery at 7.0V as a critical row but keeps 7.1V normal', () => {
-    const thresholdRow = createHealthyRow({ battery: 7.0, minBattery: 7.0 });
-    const safeRow = createHealthyRow({ battery: 7.1, minBattery: 7.1 });
+  it('keeps low voltage normal until an actual brownout occurs', () => {
+    const lowVoltageRow = createHealthyRow({ battery: 7.0, minBattery: 7.0, brownout: false });
+    const brownoutRow = createHealthyRow({ battery: 7.0, minBattery: 7.0, brownout: true });
 
-    expect(thresholdRow.battery).toMatchObject({
+    expect(lowVoltageRow.battery).toMatchObject({
+      value: '7.0V',
+      min: '7.0',
+      tone: 'normal',
+      action: '',
+    });
+    expect(lowVoltageRow.mode).toBe('normal');
+    expect(brownoutRow.battery).toMatchObject({
       value: '7.0V',
       min: '7.0',
       tone: 'critical',
-      action: 'LOW BATT',
+      action: 'BROWNOUT',
     });
-    expect(thresholdRow.mode).toBe('critical');
-    expect(safeRow.battery.tone).toBe('normal');
-    expect(safeRow.mode).toBe('normal');
+    expect(brownoutRow.mode).toBe('critical');
   });
 
   it('exposes explicit radio bars and live link flags in row data', () => {
